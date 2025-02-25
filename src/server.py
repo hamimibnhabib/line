@@ -11,6 +11,8 @@ PASSWORD = "**atp33adp22amp**"
 MAX_TRIAL_COUNT = 10
 DIRECTION_FORWARD = "forward"
 DIRECTION_BACKWARD = 'backward'
+DIRECTION_LEFT = 'left'
+DIRECTION_RIGHT = 'right'
 
 # Default motor state
 motor_running = False
@@ -35,8 +37,11 @@ HTML_PAGE = """<!DOCTYPE html>
 
     <h2>ESP32 Motor Control</h2>
 
-    <button class="btn-direction" onclick="setDirection('forward')">Set Forward</button>
-    <button class="btn-direction" onclick="setDirection('backward')">Set Backward</button>
+    <button class="btn-direction" onclick="setDirection('forward')">Forward</button>
+    <button class="btn-direction" onclick="setDirection('backward')">Backward</button>
+    <br>
+    <button class="btn-direction" onclick="setDirection('left')">Left</button>
+    <button class="btn-direction" onclick="setDirection('right')">Right</button>
     <br>
     <button class="btn-start" onclick="startMotor()">Start Motor</button>
     <button class="btn-stop" onclick="stopMotor()">Stop Motor</button>
@@ -89,13 +94,23 @@ def update_motor_pin_values(motor_left_in_1_pin, motor_left_in_2_pin, motor_righ
 
     if motor_running:
         if motor_direction == DIRECTION_FORWARD:
+            motor_left_in_1_pin.value(0)
+            motor_left_in_2_pin.value(1)
+            motor_right_in_1_pin.value(0)
+            motor_right_in_2_pin.value(1)
+        elif motor_direction == DIRECTION_BACKWARD:
             motor_left_in_1_pin.value(1)
             motor_left_in_2_pin.value(0)
             motor_right_in_1_pin.value(1)
             motor_right_in_2_pin.value(0)
-        else:
+        elif motor_direction == DIRECTION_RIGHT:
             motor_left_in_1_pin.value(0)
             motor_left_in_2_pin.value(1)
+            motor_right_in_1_pin.value(0)
+            motor_right_in_2_pin.value(0)
+        elif motor_direction == DIRECTION_LEFT:
+            motor_left_in_1_pin.value(0)
+            motor_left_in_2_pin.value(0)
             motor_right_in_1_pin.value(0)
             motor_right_in_2_pin.value(1)
     else:
@@ -128,6 +143,12 @@ def handle_request(client, request):
                 elif data["direction"] == DIRECTION_BACKWARD:
                     motor_direction = DIRECTION_BACKWARD
                     print("Motor direction set to BACKWARD")
+                elif data["direction"] == DIRECTION_LEFT:
+                    motor_direction = DIRECTION_LEFT
+                    print("Motor direction set to LEFT")
+                elif data["direction"] == DIRECTION_RIGHT:
+                    motor_direction = DIRECTION_RIGHT
+                    print("Motor direction set to RIGHT")
 
                 client.send("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"direction set\"}")
             else:
@@ -153,8 +174,10 @@ def handle_request(client, request):
         client.send("HTTP/1.1 500 Internal Server Error\r\n\r\n")
 
 # Start the server
-def start_server(motor_left_in_1_pin, motor_left_in_2_pin, motor_right_in_1_pin, motor_right_in_2_pin):
+def start_server(status_led_pin, motor_left_in_1_pin, motor_left_in_2_pin, motor_right_in_1_pin, motor_right_in_2_pin):
+    status_led_pin.value(0)
     connect_wifi()
+    status_led_pin.value(1)
     
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind(("", 80))
@@ -162,7 +185,13 @@ def start_server(motor_left_in_1_pin, motor_left_in_2_pin, motor_right_in_1_pin,
     
     print("Server started on port 80")
 
+    status_led_value = 0
+
     while True:
+        status_led_value = 0 if status_led_value else 1
+
+        status_led_pin(status_led_value)
+
         client, addr = server.accept()
         print("Client connected:", addr)
         request = client.recv(1024)
