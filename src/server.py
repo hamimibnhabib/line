@@ -5,8 +5,8 @@ from time import sleep
 from machine import Pin
 
 # WiFi credentials
-SSID = "Mitochondria"
-PASSWORD = "**atp33adp22amp**"
+SSID = "hamim"
+PASSWORD = "@h774a447mim"
 
 MAX_TRIAL_COUNT = 10
 DIRECTION_FORWARD = "forward"
@@ -86,8 +86,15 @@ def connect_wifi():
         current_trial_number = current_trial_number + 1
 
         sleep(1)
+
+    if not wlan.isconnected():
+        print("Failed to connect to WiFi")
+
+        return False
     
     print("Connected to WiFi:", wlan.ifconfig())
+
+    return True
 
 def update_motor_pin_values(motor_left_in_1_pin, motor_left_in_2_pin, motor_right_in_1_pin, motor_right_in_2_pin):
     global motor_running, motor_direction
@@ -176,7 +183,10 @@ def handle_request(client, request):
 # Start the server
 def start_server(status_led_pin, motor_left_in_1_pin, motor_left_in_2_pin, motor_right_in_1_pin, motor_right_in_2_pin):
     status_led_pin.value(0)
-    connect_wifi()
+
+    if not connect_wifi():
+        return
+
     status_led_pin.value(1)
     
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
