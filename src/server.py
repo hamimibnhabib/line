@@ -5,8 +5,8 @@ from time import sleep
 from machine import Pin
 
 # WiFi credentials
-SSID = "hamim"
-PASSWORD = "@h774a447mim"
+SSID = "Mitochondria"
+PASSWORD = "**atp33adp22amp**"
 
 MAX_TRIAL_COUNT = 10
 DIRECTION_FORWARD = "forward"
@@ -23,30 +23,131 @@ HTML_PAGE = """<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESP32 Motor Control</title>
+    <title>ESP32 Control</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; background-color: #f4f4f4; }
-        h2 { color: #333; }
-        button { padding: 15px; margin: 10px; font-size: 18px; border: none; cursor: pointer; border-radius: 5px; }
-        .btn-start { background-color: green; color: white; }
-        .btn-stop { background-color: red; color: white; }
-        .btn-direction { background-color: blue; color: white; }
+        body {
+            margin: 0;
+            background-image: url('https://picsum.photos/2000/1000');
+            background-size: cover;
+            font-family: Monospace;
+            font-size: 13px;
+            line-height: 24px;
+            overscroll-behavior: none;
+            text-rendering: optimizeLegibility;
+            user-select: none;
+            font-smooth: always;
+        }
+        .container {
+            margin: 20px;
+        }
+        .row {
+            margin-bottom: 20px;
+        }
+        .btn {
+            width: 100px;
+            height: 100px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            display: inline-block;
+            text-align: center;
+            line-height: 100px;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, transform 0.2s ease-in-out;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+        .btn:hover {
+            background-color: #444;
+            transform: scale(1.1);
+        }
+        .btn:active {
+            background-color: #555;
+            transform: scale(0.9);
+        }
+        .logo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            display: inline-block;
+            text-align: center;
+            line-height: 100px;
+            cursor: pointer;
+            background-image: url('https://picsum.photos/200/300');
+            background-size: cover;
+        }
+        #connection-status {
+            font-size: 18px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
-
-    <h2>ESP32 Motor Control</h2>
-
-    <button class="btn-direction" onclick="setDirection('forward')">Forward</button>
-    <button class="btn-direction" onclick="setDirection('backward')">Backward</button>
-    <br>
-    <button class="btn-direction" onclick="setDirection('left')">Left</button>
-    <button class="btn-direction" onclick="setDirection('right')">Right</button>
-    <br>
-    <button class="btn-start" onclick="startMotor()">Start Motor</button>
-    <button class="btn-stop" onclick="stopMotor()">Stop Motor</button>
-
-    <script>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 text-center">
+                <div class="logo" id="logo"></div>
+                <h1>ESP32 Control</h1>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-3">
+                <button type="button" class="btn" id="start-button" name="Start" onclick="setDirection('start')">Start</button>
+            </div>
+            <div class="col-md-3">
+                <button type="button" class="btn" id="stop-button" name="Stop" onclick="setDirection('stop')">Stop</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-3">
+                <button type="button" class="btn" id="forward-button" name="Forward" onclick="setDirection('forward')">forward</button>
+            </div>
+            <div class="col-md-3">
+                <button type="button" class="btn" id="backward-button" name="Backward" onclick="setDirection('backward')">backward</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-3">
+                <button type="button" class="btn" id="left-button" name="Left" onclick="setDirection('left')">left</button>
+            </div>
+            <div class="col-md-3">
+                <button type="button" class="btn" id="right-button" name="Right" onclick="setDirection('right')">right</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <label for="speed" class="form-label">Speed</label>
+                <input type="range" class="form-range" id="speed" min="0" max="100" value="50" oninput="sendSpeed(this.value)">
+                <p id="speed-value">50</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12 text-center">
+                <p id="current-speed"></p>
+                <p id="current-direction"></p>
+            </div>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="connection-modal" tabindex="-1" aria-labelledby="connection-modal-label" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="connection-modal-label">Connection Status</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="connection-status"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+     <script>
         async function setDirection(direction) {
             const response = await fetch("/direction", {
                 method: "POST",
@@ -69,7 +170,6 @@ HTML_PAGE = """<!DOCTYPE html>
             // alert(data.status);
         }
     </script>
-
 </body>
 </html>
 """
