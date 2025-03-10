@@ -303,8 +303,8 @@ def start_server(status_led_pin, motor_left_in_1_pin, motor_left_in_2_pin, motor
         status_led_pin(status_led_value)
 
         client, addr = server.accept()
-        print("Client connected:", addr)
-        request = client.recv(1024)
+        print("Cstlient connected:", addr)
+        reque = client.recv(1024)
         handle_request(client, request)
         client.close()
         update_motor_pin_values(motor_left_in_1_pin, motor_left_in_2_pin, motor_right_in_1_pin, motor_right_in_2_pin)
