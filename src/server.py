@@ -197,8 +197,8 @@ def connect_wifi():
     return True
 
 def update_motor_pin_values(motor_left_in_1_pin, motor_left_in_2_pin, motor_right_in_1_pin, motor_right_in_2_pin):
-    global motor_running, motor_direction
-
+    global motor_running, motor_direction, DIRECTION_FORWARD
+    print(motor_running, motor_direction)
     if motor_running:
         if motor_direction == DIRECTION_FORWARD:
             motor_left_in_1_pin.value(0)
@@ -228,7 +228,7 @@ def update_motor_pin_values(motor_left_in_1_pin, motor_left_in_2_pin, motor_righ
 
 # Handle HTTP requests
 def handle_request(client, request):
-    global motor_running, motor_direction
+    global motor_running, motor_direction, DIRECTION_FORWARD
 
     try:
         # Read and parse request
@@ -256,7 +256,10 @@ def handle_request(client, request):
                 elif data["direction"] == DIRECTION_RIGHT:
                     motor_direction = DIRECTION_RIGHT
                     print("Motor direction set to RIGHT")
-
+                elif data["direction"] == "start":
+                    motor_running = True
+                elif data["direction"] == "stop":
+                    motor_running = False
                 client.send("HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\": \"direction set\"}")
             else:
                 client.send("HTTP/1.1 400 Bad Request\r\n\r\n")
@@ -304,7 +307,9 @@ def start_server(status_led_pin, motor_left_in_1_pin, motor_left_in_2_pin, motor
 
         client, addr = server.accept()
         print("Cstlient connected:", addr)
-        reque = client.recv(1024)
+        request = client.recv(1024)
         handle_request(client, request)
         client.close()
         update_motor_pin_values(motor_left_in_1_pin, motor_left_in_2_pin, motor_right_in_1_pin, motor_right_in_2_pin)
+        print("pin values",motor_left_in_1_pin.value(), motor_left_in_2_pin.value(), motor_right_in_1_pin.value(), motor_right_in_2_pin.value())
+        print(motor_direction)
