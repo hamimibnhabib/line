@@ -118,11 +118,7 @@ HTML_PAGE = """<!DOCTYPE html>
         </div>
         <div class="row">
             <div class="col-md-12">
-                <label for="speed" class="form-label">Speed</label>
-                <input type="range" class="form-range" id="speed" min="0" max="100" value="50" oninput="sendSpeed(this.value)">
-                <p id="speed-value">50</p>
-            </div>
-        </div>
+          </div>
         <div class="row">
             <div class="col-md-12 text-center">
                 <p id="current-speed"></p>
