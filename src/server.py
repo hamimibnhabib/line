@@ -82,6 +82,26 @@ HTML_PAGE = """<!DOCTYPE html>
             font-size: 18px;
             font-weight: bold;
         }
+        #joystick {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            border: 1px solid #ccc;
+            border-radius: 50%;
+            background-color: #fff;
+        }
+        #joystick .handle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            border: 1px solid #ccc;
+            border-radius: 50%;
+            background-color: #fff;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -117,12 +137,25 @@ HTML_PAGE = """<!DOCTYPE html>
             </div>
         </div>
         <div class="row">
+            <div class="col-md-12 text-center">
+                <button type="button" class="btn" id="switch-button" name="Switch" onclick="switchController()">Switch</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12 text-center">
+                <div id="joystick" style="display: none;">
+                    <div class="handle" id="handle"></div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
             <div class="col-md-12">
-          </div>
+            </div>
         <div class="row">
             <div class="col-md-12 text-center">
                 <p id="current-speed"></p>
                 <p id="current-direction"></p>
+                <p id="joystick-direction"></p>
             </div>
         </div>
     </div>
@@ -143,7 +176,12 @@ HTML_PAGE = """<!DOCTYPE html>
             </div>
         </div>
     </div>
-     <script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+    <script>
+        let currentSpeed = 0;
+        let currentDirection = '';
+        let controller = 'button';
+
         async function setDirection(direction) {
             const response = await fetch("/direction", {
                 method: "POST",
@@ -151,19 +189,115 @@ HTML_PAGE = """<!DOCTYPE html>
                 body: JSON.stringify({ direction: direction })
             });
             const data = await response.json();
-            // alert(data.status);
+            updateSpeedAndDirection(data.speed, data.direction);
         }
 
-        async function startMotor() {
-            const response = await fetch("/start", { method: "POST" });
-            const data = await response.json();
-            // alert(data.status);
+        function updateSpeedAndDirection(speed, direction) {
+            currentSpeed = speed;
+            currentDirection = direction;
+            document.getElementById('current-speed').innerText = `Current Speed: ${speed}`;
+            document.getElementById('current-direction').innerText = `Current Direction: ${direction}`;
         }
 
-        async function stopMotor() {
-            const response = await fetch("/stop", { method: "POST" });
-            const data = await response.json();
-            // alert(data.status);
+        function switchController() {
+            if (controller === 'button') {
+                controller = 'joystick';
+                document.getElementById('start-button').style.display = 'none';
+                document.getElementById('stop-button').style.display = 'none';
+                document.getElementById('forward-button').style.display = 'none';
+                document.getElementById('backward-button').style.display = 'none';
+                document.getElementById('left-button').style.display = 'none';
+                document.getElementById('right-button').style.display = 'none';
+                document.getElementById('joystick').style.display = 'block';
+            } else {
+                controller = 'button';
+                document.getElementById('start-button').style.display = 'block';
+                document.getElementById('stop-button').style.display = 'block';
+                document.getElementById('forward-button').style.display = 'block';
+                document.getElementById('backward-button').style.display = 'block';
+                document.getElementById('left-button').style.display = 'block';
+                document.getElementById('right-button').style.display = 'block';
+                document.getElementById('joystick').style.display = 'none';
+            }
+        }
+
+        let joystick = document.getElementById('joystick');
+        let handle = document.getElementById('handle');
+        let radius = 90; // joystick-এর ব্যাসার্ধ
+
+        joystick.addEventListener('mousedown', (e) => {
+            let rect = joystick.getBoundingClientRect();
+            let x = e.clientX - rect.left;
+            let y = e.clientY - rect.top;
+            let angle = Math.atan2(y - rect.height / 2, x - rect.width / 2);
+            let length = Math.sqrt(Math.pow(x - rect.width / 2, 2) + Math.pow(y - rect.height / 2, 2));
+
+            if (length > radius) {
+                x = rect.width / 2 + Math.cos(angle) * radius;
+                y = rect.height / 2 + Math.sin(angle) * radius;
+            }
+
+            handle.style.top = `${y}px`;
+            handle.style.left = `${x}px`;
+
+            let direction = Math.floor(angle * 180 / Math.PI);
+
+            if (direction > -45 && direction < 45) {
+                setDirection('forward');
+                document.getElementById('joystick-direction').innerText = 'Joystick Direction: Forward';
+            } else if (direction > 45 && direction < 135) {
+                setDirection('right');
+                document.getElementById('joystick-direction').innerText = 'Joystick Direction: Right';
+            } else if (direction > 135 || direction < -135) {
+                setDirection('backward');
+                document.getElementById('joystick-direction').innerText = 'Joystick Direction: Backward';
+            } else if (direction > -135 && direction < -45) {
+                setDirection('left');
+                document.getElementById('joystick-direction').innerText = 'Joystick Direction: Left';
+            }
+
+            document.addEventListener('mousemove', moveJoystick);
+            document.addEventListener('mouseup', stopJoystick);
+        });
+
+        function moveJoystick(e) {
+            let rect = joystick.getBoundingClientRect();
+            let x = e.clientX - rect.left;
+            let y = e.clientY - rect.top;
+            let angle = Math.atan2(y - rect.height / 2, x - rect.width / 2);
+            let length = Math.sqrt(Math.pow(x - rect.width / 2, 2) + Math.pow(y - rect.height / 2, 2));
+
+            if (length > radius) {
+                x = rect.width / 2 + Math.cos(angle) * radius;
+                y = rect.height / 2 + Math.sin(angle) * radius;
+            }
+
+            handle.style.top = `${y}px`;
+            handle.style.left = `${x}px`;
+
+            let direction = Math.floor(angle * 180 / Math.PI);
+
+            if (direction > -45 && direction < 45) {
+                setDirection('forward');
+                document.getElementById('joystick-direction').innerText = 'Joystick Direction: Forward';
+            } else if (direction > 45 && direction < 135) {
+                setDirection('right');
+                document.getElementById('joystick-direction').innerText = 'Joystick Direction: Right';
+            } else if (direction > 135 || direction < -135) {
+                setDirection('backward');
+                document.getElementById('joystick-direction').innerText = 'Joystick Direction: Backward';
+            } else if (direction > -135 && direction < -45) {
+                setDirection('left');
+                document.getElementById('joystick-direction').innerText = 'Joystick Direction: Left';
+            }
+        }
+
+        function stopJoystick() {
+            handle.style.top = '50%';
+            handle.style.left = '50%';
+            document.getElementById('joystick-direction').innerText = 'Joystick Direction: Neutral';
+            document.removeEventListener('mousemove', moveJoystick);
+            document.removeEventListener('mouseup', stopJoystick);
         }
     </script>
 </body>
