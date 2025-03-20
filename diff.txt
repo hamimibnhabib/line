@@ -1,0 +1,37 @@
+diff --git a/src/server.py b/src/server.py
+index 489063e..8c7d7e9 100644
+--- a/src/server.py
++++ b/src/server.py
+@@ -153,8 +153,6 @@ HTML_PAGE = """<!DOCTYPE html>
+             </div>
+         <div class="row">
+             <div class="col-md-12 text-center">
+-                <p id="current-speed"></p>
+-                <p id="current-direction"></p>
+                 <p id="joystick-direction"></p>
+             </div>
+         </div>
+@@ -178,8 +176,6 @@ HTML_PAGE = """<!DOCTYPE html>
+     </div>
+     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+     <script>
+-        let currentSpeed = 0;
+-        let currentDirection = '';
+         let controller = 'button';
+ 
+         async function setDirection(direction) {
+@@ -189,14 +185,6 @@ HTML_PAGE = """<!DOCTYPE html>
+                 body: JSON.stringify({ direction: direction })
+             });
+             const data = await response.json();
+-            updateSpeedAndDirection(data.speed, data.direction);
+-        }
+-
+-        function updateSpeedAndDirection(speed, direction) {
+-            currentSpeed = speed;
+-            currentDirection = direction;
+-            document.getElementById('current-speed').innerText = `Current Speed: ${speed}`;
+-            document.getElementById('current-direction').innerText = `Current Direction: ${direction}`;
+         }
+ 
+         function switchController() {
