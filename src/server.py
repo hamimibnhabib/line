@@ -75,7 +75,7 @@ HTML_PAGE = """<!DOCTYPE html>
             text-align: center;
             line-height: 100px;
             cursor: pointer;
-            background-image: url('https://picsum.photos/200/300');
+            background-image: url('https://fastly.picsum.photos/id/16/2500/1667.jpg?hmac=uAkZwYc5phCRNFTrV_prJ_0rP0EdwJaZ4ctje2bY7aE');
             background-size: cover;
         }
         #connection-status {
